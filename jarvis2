@@ -1,0 +1,92 @@
+import pyttsx3
+import datetime
+import speech_recognition as sr
+import wikipedia
+import webbrowser
+import os
+import smtplib
+
+engine = pyttsx3.init("sapi5")
+voices = engine.getProperty('voices')
+# print(voices[0])
+engine.setProperty('voice', voices[1].id)
+
+
+def speak(audio):
+    engine.say(audio)
+    engine.runAndWait()
+
+
+def wish():
+    hour = int(datetime.datetime.now().hour)
+    if hour == 0 and hour < 12:
+        speak("GOOD MORNING")
+    elif 12 <= hour <= 18:
+        speak("good afternoon")
+    else:
+        speak("good evening")
+
+    speak(" i am on. how may i help you")
+
+
+def takecommand():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("listinening.....")
+        r.pause_threshold = 1
+        audio = r.listen(source)
+
+    try:
+        print("recocnizing....")
+        query = r.recognize_google(audio, language='en-in')
+        print(f"user said: {query}\n ")
+
+    except Exception as e:
+        # print(e)
+
+        print("say that again")
+        return "none"
+    return query
+
+
+def sendEmail(to, content):
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    server.login("ayushbhargava2205@gmail.com", 'ashubayush')
+    server.sendmail('ayushbhargava2205@gmail.com', to, content)
+    server.close()
+
+
+if __name__ == "__main__":
+    wish()
+    while True:
+        query = takecommand().lower()
+
+        if 'wikipedia' in query:
+            speak("seraching")
+            query = query.replace("wikipedia", "")
+            results = wikipedia.summary(query, sentences=2)
+            speak("according to wikipedia")
+            print(results)
+            speak(results)
+
+        elif 'open youtube' in query:
+            webbrowser.open("youtube.com")
+
+        elif 'play music' in query:
+            music_dir = 'C:\\music\\fav'
+            songs = os.listdir(music_dir)
+            print(songs)
+            os.startfile(os.path.join(music_dir, songs[0]))
+
+        elif 'email to ayush' in query:
+            try:
+                speak("what should i say")
+                content = takecommand()
+                to = "1829008@kiit.ac.in"
+                sendEmail(to, content)
+                speak("email has been sent")
+            except Exception as e:
+                print(e)
+                speak("sorry not sent")
